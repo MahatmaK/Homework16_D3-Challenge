@@ -1,5 +1,3 @@
-// @TODO: YOUR CODE HERE!
-
 // Define height and width of svg
 var svgWidth = 960;
 var svgHeight = 500;
@@ -71,47 +69,29 @@ d3.csv("assets/data/data.csv").then((healthData) => {
     chartGroup.append("g")
         .call(leftAxis);
 
+    // Add circles
+    var elem = chartGroup.selectAll("g")
+        .data(healthData);
 
-    // Add cricles
-    // var circlesGroup = chartGroup.selectAll("g")
-    //     .data(healthData)
-    //     .enter()
-    //     .append("circle")
-    //         .attr("cx", d => xLinearScale(d.poverty))
-    //         .attr("cy", d => yLinearScale(d.healthcare))
-    //         .attr("r", 10)
-    //         
-    
-    // circlesGroup.append("text")
-    //     .text('hi');
+    var elemEnter = elem.enter()
+    .append("g");
 
-    var circlesGroup = chartGroup.selectAll("g.circles")
-    
-    circlesGroup = circlesGroup.data(healthData)
-        .enter()
-        .append("g")
-        .classed("circles", true);
-
-    circlesGroup.append("svg:circle")
-
-    circlesGroup.selectAll("circle")
+    var circle = elemEnter.append("circle")
         .attr("cx", d => xLinearScale(d.poverty))
         .attr("cy", d => yLinearScale(d.healthcare))
-        .attr("r", 10)        
+        .attr("r", 11)        
         .style("fill", "rgb(138, 189, 211)");
-
-    circlesGroup.append("text");
-    
-    circlesGroup.selectAll("text")
-        .text("Hi")
+        
+  
+    elemEnter.append("text")
+        .attr("dx", d => xLinearScale(d.poverty))
+        .attr("dy", d => yLinearScale(d.healthcare) + 3)    
+        .text(function(d) {return d.abbr})
         .attr("font-family",  "Courier")
-        .attr("fill", "black")
+        .attr("fill", "white")
         .style("opacity", "0.8")
         .attr("font-size", "0.8em")
         .attr("text-anchor",  "middle");
-    
-
-
 
     // Add bottom text
     chartGroup.append("text")
