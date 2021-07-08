@@ -1,18 +1,18 @@
 // Define height and width of svg
-var svgWidth = 960;
-var svgHeight = 500;
+var svgWidth = 1000;
+var svgHeight = 600;
 
 // Define margins for svg
 var margin = {
     top: 30,
     right: 40,
     bottom: 80,
-    left: 60
+    left: 150
 };
 
 // Define height and width of graph
 var width = svgWidth - margin.left - margin.right;
-var height = svgHeight - margin.top - margin.bottom;
+var height = svgHeight - margin.top - margin.bottom - 50;
 
 // Add svg to webpage
 var svg = d3
@@ -29,32 +29,38 @@ var chartGroup = svg.append("g")
 // Collect data 
 d3.csv("assets/data/data.csv").then((healthData) => {
     
-    // Change states to abbreviated version
-    healthData.forEach((data) => {
-        for(i = 0; i < states.length; i++){
-            if(states[i][0] == data.state){
-                data.state = states[i][1];
-            }
-        }
-    });
+    console.log(healthData[0]);
 
     // Define blanks arrays
     var xPoverty = [];
+    var xAge = [];
+    var xIncome = [];
     var yHealthCare = [];
+    var ySmoke = [];
+    var yObese = [];
 
     // Iterate through data and push values to arrays to graph
     healthData.forEach(state => {
         xPoverty.push(state.poverty);
-        yHealthCare.push(state.healthcare)
+        xAge.push(state.age);
+        xIncome.push(state.income);
+        yHealthCare.push(state.healthcare);
+        ySmoke.push(state.smokes);
+        yObese.push(state.obesity);
     });
 
-    // Create scales    
+    // Create scales
+    
+    // Calculate difference between min and max value. Will add 10% of diff value to min and max
+    var xDiff = Math.max.apply(null, xPoverty) - Math.min.apply(null, xPoverty);
+    var yDiff = Math.max.apply(null, yHealthCare) - Math.min.apply(null, yHealthCare);
+
     var xLinearScale =  d3.scaleLinear()
-        .domain([Math.min.apply(null,xPoverty) - 1, Math.max.apply(null, xPoverty) + 2])
+        .domain([Math.min.apply(null, xPoverty) - .1*xDiff, Math.max.apply(null, xPoverty) + .1*xDiff])
         .range([0, width]);
 
     var yLinearScale = d3.scaleLinear()
-        .domain([Math.min.apply(null,yHealthCare) - 1, Math.max.apply(null, yHealthCare)+2])
+        .domain([Math.min.apply(null, yHealthCare) - .1*yDiff, Math.max.apply(null, yHealthCare) + .1*yDiff])
         .range([height, 0]);
 
     // Create Axis
@@ -64,49 +70,232 @@ d3.csv("assets/data/data.csv").then((healthData) => {
     // Append axes to chartGroup
     chartGroup.append("g")
         .attr("transform", `translate(0, ${height})`)
-        .call(bottomAxis);
+        .call(bottomAxis)
+        .classed("bottom-axis", true);
 
     chartGroup.append("g")
-        .call(leftAxis);
+        .call(leftAxis)
+        .classed("left-axis", true);;
 
     // Add circles
-    var elem = chartGroup.selectAll("g")
-        .data(healthData);
+    var circlesGroup = chartGroup.selectAll("circle")
+        .data(healthData)
+        .enter()
+        .append("circle")
+        .attr("cx", (d,i) => xLinearScale(xPoverty[i]))
+        .attr("cy", (d,i) => yLinearScale(yHealthCare[i]))
+        .attr("r", 11)   
+        .style("fill", "rgb(138, 189, 211)")   
+        .classed("circle", true);  
 
-    var elemEnter = elem.enter()
-    .append("g");
-
-    var circle = elemEnter.append("circle")
-        .attr("cx", d => xLinearScale(d.poverty))
-        .attr("cy", d => yLinearScale(d.healthcare))
-        .attr("r", 11)        
-        .style("fill", "rgb(138, 189, 211)");
-        
-  
-    elemEnter.append("text")
-        .attr("dx", d => xLinearScale(d.poverty))
-        .attr("dy", d => yLinearScale(d.healthcare) + 3)    
+    // Add circle text
+    var circlesLabels = chartGroup.selectAll(null)
+        .data(healthData)
+        .enter()
+        .append("text")
+        .attr("dx", (d,i) => xLinearScale(d.poverty))
+        .attr("dy", (d,i) => yLinearScale(d.healthcare) + 3)    
         .text(function(d) {return d.abbr})
         .attr("font-family",  "Courier")
         .attr("fill", "white")
         .style("opacity", "0.8")
         .attr("font-size", "0.8em")
-        .attr("text-anchor",  "middle");
-
-    // Add bottom text
+        .attr("text-anchor",  "middle")
+        .classed("circle-text", true);
+   
+    // Add bottom text options
     chartGroup.append("text")
         .attr("transform", `translate(${width / 2}, ${height + margin.top + 20})`)
+        .attr("text-anchor",  "middle")
         .attr("font-weight", "bold")
         .attr("font-size", "18px")
-        .text("In Poverty (%)");
+        .text("In Poverty (%)")
+        .style("fill", "black")
+        .classed("bottom-text", true);
 
-    // Add left text
     chartGroup.append("text")
-    .attr("transform", `translate(${-margin.left / 2}, ${height /2}) rotate(-90)`)
-    .attr("text-anchor", "middle")
-    .attr("font-weight", "bold")
-    .attr("font-size", "18px")
-    .text("Lacks Healthcare (%)");
+        .attr("transform", `translate(${width / 2}, ${height + margin.top + 45})`)
+        .attr("text-anchor",  "middle")
+        .attr("font-weight", "bold")
+        .attr("font-size", "18px")
+        .text("Age (Median)")
+        .style("fill", "lightgray")
+        .classed("bottom-text", true);
+
+    chartGroup.append("text")
+        .attr("transform", `translate(${width / 2}, ${height + margin.top + 70})`)
+        .attr("text-anchor",  "middle")
+        .attr("font-weight", "bold")
+        .attr("font-size", "18px")
+        .text("Household Income (Median)")
+        .style("fill", "lightgray")
+        .classed("bottom-text", true);
+    
+     
+    // Add left text options
+    chartGroup.append("text")
+        .attr("transform", `translate(-50, ${height /2}) rotate(-90)`)
+        .attr("text-anchor",  "middle")
+        .attr("text-anchor", "middle")
+        .attr("font-weight", "bold")
+        .attr("font-size", "18px")
+        .text("Lacks Healthcare (%)")
+        .style("fill", "black")
+        .classed("left-text", true);
+
+    chartGroup.append("text")
+        .attr("transform", `translate(-75, ${height /2}) rotate(-90)`)
+        .attr("text-anchor",  "middle")
+        .attr("text-anchor", "middle")
+        .attr("font-weight", "bold")
+        .attr("font-size", "18px")
+        .text("Smoke (%)")
+        .style("fill", "lightgray")
+        .classed("left-text", true);
+
+    chartGroup.append("text")
+        .attr("transform", `translate(-100, ${height /2}) rotate(-90)`)
+        .attr("text-anchor",  "middle")
+        .attr("text-anchor", "middle")
+        .attr("font-weight", "bold")
+        .attr("font-size", "18px")
+        .text("Obese (%)")
+        .style("fill", "lightgray")
+        .classed("left-text", true);
+
+
+    // On click of left axis text
+    
+    // Select the text on the left axis
+    leftAxisText = chartGroup.selectAll(".left-text")
+
+    // Define on click function
+    leftAxisText.on("click", function() {
+
+        // Change all text to light gray
+        leftAxisText.style("fill", "lightgray");
+        
+        // Change select
+        d3.select(this)
+            .style("fill", "black");
+
+        // Determine and store which axis data has been selected
+        var selectedLeftAxis = d3.select(this).text();
+        
+        switch (selectedLeftAxis) {
+            case "Lacks Healthcare (%)":
+                var yArray = yHealthCare;
+                break;
+            case "Smoke (%)":
+                var yArray = ySmoke;
+                break;
+            case "Obese (%)":
+                var yArray = yObese;
+        }
+
+        // Create scales   
+
+        // Recalculate diff
+        yDiff = Math.max.apply(null, yHealthCare) - Math.min.apply(null, yHealthCare);
+
+        yLinearScale = d3.scaleLinear()
+        .domain([Math.min.apply(null, yArray) - .1*yDiff, Math.max.apply(null, yArray)+ .1*yDiff])
+        .range([height, 0]);
+
+        // Create Axis
+        leftAxis = d3.axisLeft(yLinearScale);
+
+        // Append axis to chartGroup
+        chartGroup.select(".left-axis")
+            .transition()
+            .duration(300)
+            .call(leftAxis);
+            
+        // Update circles
+        chartGroup.selectAll("circle")
+            .transition()
+            .duration(300)
+            .attr("cy", (d,i) => yLinearScale(yArray[i]));
+
+        // Update circle text
+        chartGroup.selectAll(".circle-text")
+            .transition()
+            .duration(300)
+            .attr("dy", (d,i) => yLinearScale(yArray[i]) + 3)
+            .style("fill", "white");
+
+
+    });
+    // On click of bottom axis text
+    
+    // Select the text on the bottom axis
+    bottomAxisText = chartGroup.selectAll(".bottom-text")
+
+    // Define on click function
+    bottomAxisText.on("click", function() {
+
+        // Change all text to light gray
+        bottomAxisText.style("fill", "lightgray");
+        
+        // Change select
+        d3.select(this)
+            .style("fill", "black");
+
+        // Determine and store which axis data has been selected
+        var selectedbottomAxis = d3.select(this).text();
+        
+        switch (selectedbottomAxis) {
+            case "In Poverty (%)":
+                var xArray = xPoverty ;
+                break;
+            case "Age (Median)":
+                var xArray = xAge;
+                break;
+            case "Household Income (Median)":
+                var xArray = xIncome;
+        }
+
+        // Create scales   
+        
+        // Recalculate diff
+        diff = Math.max.apply(null, xArray) - Math.min.apply(null, xArray);
+        
+        xLinearScale = d3.scaleLinear()
+        .domain([Math.min.apply(null, xArray) - .1*diff, Math.max.apply(null, xArray)+ .1*diff])
+        .range([0, width]);
+
+        // Create Axis
+        bottomAxis = d3.axisBottom(xLinearScale);
+
+        // Append axis to chartGroup
+        chartGroup.select(".bottom-axis")
+            .transition()
+            .duration(300)
+            .call(bottomAxis);
+        
+    
+        // Update circles
+        chartGroup.selectAll("circle")
+            .transition()
+            .duration(300)
+            .attr("cx", (d,i) => xLinearScale(xArray[i]) + 3);
+
+
+            
+        // Update circle text
+        chartGroup.selectAll(".circle-text")
+            .transition()
+            .duration(300)
+            .attr("dx", (d,i) => xLinearScale(xArray[i]) + 3);     
+    });
+
+
+
+
+
+
+
+
 
 
     // // Add tool tip
