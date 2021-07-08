@@ -49,8 +49,13 @@ d3.csv("assets/data/data.csv").then((healthData) => {
         yObese.push(state.obesity);
     });
 
+
+
     // Create scales
     
+    var xArray = xPoverty;
+    var yArray = yHealthCare;
+
     // Calculate difference between min and max value. Will add 10% of diff value to min and max
     var xDiff = Math.max.apply(null, xPoverty) - Math.min.apply(null, xPoverty);
     var yDiff = Math.max.apply(null, yHealthCare) - Math.min.apply(null, yHealthCare);
@@ -293,22 +298,49 @@ d3.csv("assets/data/data.csv").then((healthData) => {
 
 
 
+    var toolTip = d3.tip()
+        .attr("class", "tooltip")
+        .offset([-80, -60])
+        .html(function(d,i) {
+            return (`<strong>${xArray[i]}</strong>`);
+        });
+
+        chartGroup.call(toolTip);
+
+        circlesGroup.on("mouseover", function(d,i) {
+            toolTip.show(xArray[i], this)
+        });
 
 
 
 
 
-    // // Add tool tip
-    // var toolTip = d3.select("body").append("div")
-    //     .attr("class", "tooltip");
+//     // Step 1: Append tooltip div
+//     var toolTip = d3.select("body")
+//       .append("div")
+//       .attr("position", "absolute")
+//       .classed("tooltip", true);
 
-    // circlesGroup.on("mouseover", function(d,i) {
-    //     toolTip.style("display", "block");
-    //     toolTip.html(``)
-    // })
 
-    // .on("mouseout", function() {
-    //     toolTip.style("display", "none");
-    //   });
+//     circlesLabels.on("mouseover", function(d,i) {
+//         toolTip.style("display", "block");
+//         toolTip.html(d)
+//             .style("right", d3.select(this).attr("dx") + "px")
+//             .style("top", d3.select(this).attr("dy") + "px");
+//     });
+
+//     circlesLabels.on("mouseout", function() {
+//         toolTip.style("display", "none");
+//       });
+
+
+
+//     circlesGroup.on("mouseover", function() {
+//         d3.select(this).style("stroke", "black");
+//     });
+    
+//     circlesGroup.on("mouseout", function() {
+//         d3.select(this).style("stroke", "none");
+//     });
 
 });
